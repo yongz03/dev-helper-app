@@ -14,6 +14,12 @@ Run `ng generate component component-name` to generate a new component. You can 
 
 Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
 
+## Install and lint
+
+Run `npm ci` to install the exact dependencies from `package-lock.json`, then `npm run lint` to lint TypeScript and Angular templates.
+
+On Windows, stop `ng serve` and any other process using this client's `node_modules` before running `npm ci`. It replaces `node_modules`; an active esbuild process can lock `esbuild.exe` and leave the install incomplete. After a failed install, stop the process and rerun `npm ci` before building.
+
 ## Running unit tests
 
 Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: ghcr.io/OWNER/REPOSITORY-web:latest
+          image: ghcr.io/yongz03/dev-helper-app-web:latest
           ports:
             - name: http
               containerPort: 8080

@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/OWNER/REPOSITORY.git
+    repoURL: https://github.com/yongz03/dev-helper-app.git
     targetRevision: main
     path: deploy/kubernetes
   destination:

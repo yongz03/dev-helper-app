@@ -4,7 +4,7 @@ The workflow in `.github/workflows/ci-cd.yml` builds and tests the API and Angul
 
 ## One-time setup
 
-1. Replace `OWNER/REPOSITORY` in `argocd/application.yaml` with the GitHub owner and repository. Replace it in the initial image references in `kubernetes/api.yaml` and `kubernetes/web.yaml` as well.
+1. The Argo CD source and initial GHCR image references are configured for `yongz03/dev-helper-app`. Update them if the repository is renamed or transferred.
 2. In GitHub, enable Actions and ensure the repository Actions setting **Workflow permissions** allows read and write access. The workflow uses `GITHUB_TOKEN` to push GHCR images and commit manifest updates; no personal access token is needed.
 3. Ensure the Argo CD installation can access this GitHub repository. For a private repo, add the repository credentials to Argo CD.
 4. Apply the Argo CD Application: `kubectl apply -f deploy/argocd/application.yaml`.
