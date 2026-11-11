@@ -1,0 +1,21 @@
+# .NET build output
+**/bin/
+**/obj/
+
+# Angular and npm output
+**/node_modules/
+**/dist/
+**/.angular/
+npm-debug.log*
+
+# Local SQLite database
+api/*.db
+api/*.db-shm
+api/*.db-wal
+
+# IDE and OS files
+.vs/
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini

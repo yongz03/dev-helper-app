@@ -1,0 +1,36 @@
+<main class="page-shell">
+  <header class="page-header">
+    <div><p class="eyebrow">DIRECTORY</p><h1>Customers</h1><p class="subtitle">Keep your customer contacts in one place.</p></div>
+    <span class="count">{{ customers().length }} total</span>
+  </header>
+  <section class="content-grid" aria-label="Customer management">
+    <section class="list-card" aria-labelledby="list-heading">
+      <div class="card-heading"><div><h2 id="list-heading">All customers</h2><p>Browse your saved contacts</p></div></div>
+      @if (loading()) {
+        <div class="loading-state"><mat-spinner diameter="32" /><span>Loading customers…</span></div>
+      } @else if (customers().length === 0) {
+        <div class="empty-state"><span class="empty-icon">◎</span><h3>No customers yet</h3><p>Add your first customer using the form.</p></div>
+      } @else {
+        <div class="customer-list">
+          @for (customer of customers(); track customer.id) {
+            <article class="customer-row"><div class="avatar">{{ customer.name.charAt(0).toUpperCase() }}</div><div class="customer-info"><h3>{{ customer.name }}</h3><p>{{ customer.email }}</p></div><time>{{ customer.createdAtUtc | date:'mediumDate' }}</time></article>
+          }
+        </div>
+      }
+    </section>
+    <section class="form-card" aria-labelledby="form-heading">
+      <div class="card-heading"><div><h2 id="form-heading">Add a customer</h2><p>Enter the contact details below</p></div></div>
+      <form [formGroup]="customerForm" (ngSubmit)="addCustomer()" novalidate>
+        <mat-form-field appearance="outline"><mat-label>Full name</mat-label><input matInput formControlName="name" autocomplete="name" />
+          @if (customerForm.controls.name.hasError('required') && customerForm.controls.name.touched) { <mat-error>Name is required</mat-error> }
+          @if (customerForm.controls.name.hasError('minlength') && customerForm.controls.name.touched) { <mat-error>Enter at least 2 characters</mat-error> }
+        </mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Email address</mat-label><input matInput type="email" formControlName="email" autocomplete="email" />
+          @if (customerForm.controls.email.invalid && customerForm.controls.email.touched) { <mat-error>Enter a valid email address</mat-error> }
+        </mat-form-field>
+        @if (errorMessage()) { <p class="error-message" role="alert">{{ errorMessage() }}</p> }
+        <button mat-flat-button color="primary" type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Add customer' }}</button>
+      </form>
+    </section>
+  </section>
+</main>

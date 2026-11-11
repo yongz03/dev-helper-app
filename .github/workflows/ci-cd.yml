@@ -1,0 +1,89 @@
+name: CI and deploy
+
+on:
+  pull_request:
+    paths-ignore:
+      - deploy/kubernetes/**
+      - README.md
+      - '**/*.md'
+  push:
+    branches: [main]
+    paths-ignore:
+      - deploy/kubernetes/**
+      - README.md
+      - '**/*.md'
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: dotnet restore DevHelper.sln
+      - run: dotnet build DevHelper.sln --no-restore --configuration Release
+      - run: dotnet test DevHelper.sln --no-build --configuration Release
+      - run: npm ci
+        working-directory: client
+      - run: npm run build
+        working-directory: client
+      - run: npm test -- --watch=false --browsers=ChromeHeadless
+        working-directory: client
+
+  publish-and-update:
+    name: Publish images and update GitOps manifests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set image names
+        id: image
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          repository="${GITHUB_REPOSITORY#*/}"
+          echo "api=ghcr.io/${owner}/${repository}-api" >> "$GITHUB_OUTPUT"
+          echo "web=ghcr.io/${owner}/${repository}-web" >> "$GITHUB_OUTPUT"
+          echo "tag=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Build and publish API image
+        run: |
+          docker build -f api/Dockerfile -t "${{ steps.image.outputs.api }}:${{ steps.image.outputs.tag }}" .
+          docker push "${{ steps.image.outputs.api }}:${{ steps.image.outputs.tag }}"
+      - name: Build and publish web image
+        run: |
+          docker build -f client/Dockerfile -t "${{ steps.image.outputs.web }}:${{ steps.image.outputs.tag }}" .
+          docker push "${{ steps.image.outputs.web }}:${{ steps.image.outputs.tag }}"
+      - name: Update deployment image references
+        env:
+          API_IMAGE: ${{ steps.image.outputs.api }}
+          WEB_IMAGE: ${{ steps.image.outputs.web }}
+          IMAGE_TAG: ${{ steps.image.outputs.tag }}
+        run: |
+          sed -i "s|image: .*|image: ${API_IMAGE}:${IMAGE_TAG}|" deploy/kubernetes/api.yaml
+          sed -i "s|image: .*|image: ${WEB_IMAGE}:${IMAGE_TAG}|" deploy/kubernetes/web.yaml
+      - name: Commit GitOps update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deploy/kubernetes/api.yaml deploy/kubernetes/web.yaml
+          git commit -m "chore(deploy): publish ${GITHUB_SHA::7}" || exit 0
+          git push
