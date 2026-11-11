@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 import { CustomersService } from './customers/customers.service';
 import { AppComponent } from './app.component';
@@ -7,7 +8,10 @@ describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [{ provide: CustomersService, useValue: { getCustomers: () => of([]), createCustomer: () => of({}) } }]
+      providers: [
+        provideNoopAnimations(),
+        { provide: CustomersService, useValue: { getCustomers: () => of([]), createCustomer: () => of({}) } }
+      ]
     }).compileComponents();
   });
 

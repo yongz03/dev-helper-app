@@ -20,6 +20,8 @@ Run `npm ci` to install the exact dependencies from `package-lock.json`, then `n
 
 On Windows, stop `ng serve` and any other process using this client's `node_modules` before running `npm ci`. It replaces `node_modules`; an active esbuild process can lock `esbuild.exe` and leave the install incomplete. After a failed install, stop the process and rerun `npm ci` before building.
 
+For local development, start the API with `dotnet run --launch-profile http` from `api/`, then start Angular with `npm start` from `client/`. The Angular dev server proxies `/api/**` to the API at `http://127.0.0.1:5004`.
+
 ## Running unit tests
 
 Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
