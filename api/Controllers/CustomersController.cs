@@ -47,4 +47,39 @@ public sealed class CustomersController(AppDbContext dbContext) : ControllerBase
         var response = new CustomerResponse(customer.Id, customer.Name, customer.Email, customer.CreatedAtUtc);
         return CreatedAtAction(nameof(GetCustomers), response);
     }
+
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<CustomerResponse>> UpdateCustomer(
+        int id,
+        UpdateCustomerRequest request,
+        CancellationToken cancellationToken)
+    {
+        var customer = await dbContext.Customers.FindAsync([id], cancellationToken);
+        if (customer is null)
+        {
+            return NotFound();
+        }
+
+        var name = request.Name.Trim();
+        var email = request.Email.Trim();
+        if (name.Length < 2 || !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email))
+        {
+            ModelState.AddModelError(nameof(request), "Enter a valid name and email address.");
+            return ValidationProblem(ModelState);
+        }
+
+        if (await dbContext.Customers.AnyAsync(
+                existingCustomer => existingCustomer.Id != id && existingCustomer.Email == email,
+                cancellationToken))
+        {
+            ModelState.AddModelError(nameof(request.Email), "A customer with this email already exists.");
+            return ValidationProblem(ModelState);
+        }
+
+        customer.Name = name;
+        customer.Email = email;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Ok(new CustomerResponse(customer.Id, customer.Name, customer.Email, customer.CreatedAtUtc));
+    }
 }

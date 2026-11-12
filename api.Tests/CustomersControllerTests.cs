@@ -56,4 +56,55 @@ public sealed class CustomersControllerTests
         var customers = Assert.IsType<List<CustomerResponse>>(ok.Value);
         Assert.Equal(new[] { "Ada", "Zoe" }, customers.Select(customer => customer.Name));
     }
+
+    [Fact]
+    public async Task UpdateCustomer_ValidRequest_UpdatesCustomerAndReturnsOk()
+    {
+        await using var context = CreateContext();
+        var customer = new DevHelper.Api.Models.Customer
+        {
+            Name = "Old Name", Email = "old@example.com", CreatedAtUtc = DateTime.UtcNow
+        };
+        context.Customers.Add(customer);
+        await context.SaveChangesAsync();
+        var controller = new CustomersController(context);
+
+        var result = await controller.UpdateCustomer(customer.Id,
+            new UpdateCustomerRequest { Name = " Ada Lovelace ", Email = "ada@example.com" }, default);
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var response = Assert.IsType<CustomerResponse>(ok.Value);
+        Assert.Equal("Ada Lovelace", response.Name);
+        Assert.Equal("ada@example.com", response.Email);
+        Assert.Equal(customer.CreatedAtUtc, response.CreatedAtUtc);
+    }
+
+    [Fact]
+    public async Task UpdateCustomer_DuplicateEmail_ReturnsValidationProblem()
+    {
+        await using var context = CreateContext();
+        var first = new DevHelper.Api.Models.Customer { Name = "Ada", Email = "ada@example.com", CreatedAtUtc = DateTime.UtcNow };
+        var second = new DevHelper.Api.Models.Customer { Name = "Grace", Email = "grace@example.com", CreatedAtUtc = DateTime.UtcNow };
+        context.Customers.AddRange(first, second);
+        await context.SaveChangesAsync();
+        var controller = new CustomersController(context);
+
+        var result = await controller.UpdateCustomer(second.Id,
+            new UpdateCustomerRequest { Name = "Grace Hopper", Email = first.Email }, default);
+
+        Assert.IsType<ObjectResult>(result.Result);
+        Assert.Equal("grace@example.com", second.Email);
+    }
+
+    [Fact]
+    public async Task UpdateCustomer_MissingCustomer_ReturnsNotFound()
+    {
+        await using var context = CreateContext();
+        var controller = new CustomersController(context);
+
+        var result = await controller.UpdateCustomer(42,
+            new UpdateCustomerRequest { Name = "Ada", Email = "ada@example.com" }, default);
+
+        Assert.IsType<NotFoundResult>(result.Result);
+    }
 }

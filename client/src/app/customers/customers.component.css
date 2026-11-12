@@ -17,9 +17,11 @@ h1 { color: #20243a; font-size: 36px; letter-spacing: -.04em; margin: 0; }
 .customer-info { min-width: 0; flex: 1; }
 .customer-info h3 { color: #292d42; font-size: 14px; margin: 0; }
 .customer-info p, time { color: #818698; font-size: 12px; margin: 5px 0 0; }
+.customer-row > button { flex: 0 0 auto; }
 time { margin: 0; white-space: nowrap; }
 .form-card form { display: flex; flex-direction: column; padding: 22px 24px 24px; gap: 6px; }
-.form-card button { height: 46px; border-radius: 8px; margin-top: 4px; }
+.form-actions { display: flex; gap: 8px; }
+.form-card button { min-height: 46px; border-radius: 8px; margin-top: 4px; }
 .empty-state, .loading-state { min-height: 250px; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #85899a; }
 .empty-icon { color: #7581b5; font-size: 32px; }
 .empty-state h3 { color: #30344a; font-size: 15px; margin: 10px 0 4px; }

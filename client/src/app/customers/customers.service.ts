@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CreateCustomerRequest, Customer } from './customer.model';
+import { CreateCustomerRequest, Customer, UpdateCustomerRequest } from './customer.model';
 
 @Injectable({ providedIn: 'root' })
 export class CustomersService {
@@ -14,5 +14,9 @@ export class CustomersService {
 
   createCustomer(request: CreateCustomerRequest): Observable<Customer> {
     return this.http.post<Customer>(this.customersUrl, request);
+  }
+
+  updateCustomer(id: number, request: UpdateCustomerRequest): Observable<Customer> {
+    return this.http.put<Customer>(`${this.customersUrl}/${id}`, request);
   }
 }

@@ -23,6 +23,7 @@ export class CustomersComponent implements OnInit {
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly errorMessage = signal('');
+  readonly editingCustomer = signal<Customer | null>(null);
   readonly customerForm = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
     email: ['', [Validators.required, Validators.email, Validators.maxLength(254)]]
@@ -50,6 +51,36 @@ export class CustomersComponent implements OnInit {
           this.errorMessage.set('');
         },
         error: () => this.errorMessage.set('Customer could not be added. Check the details and try again.')
+      });
+  }
+
+  editCustomer(customer: Customer): void {
+    this.editingCustomer.set(customer);
+    this.customerForm.setValue({ name: customer.name, email: customer.email });
+    this.errorMessage.set('');
+  }
+
+  cancelEdit(): void {
+    this.editingCustomer.set(null);
+    this.customerForm.reset();
+    this.errorMessage.set('');
+  }
+
+  saveCustomer(): void {
+    if (this.customerForm.invalid || this.saving()) { this.customerForm.markAllAsTouched(); return; }
+    const customer = this.editingCustomer();
+    if (!customer) { this.addCustomer(); return; }
+
+    this.saving.set(true);
+    this.customersService.updateCustomer(customer.id, this.customerForm.getRawValue())
+      .pipe(finalize(() => this.saving.set(false)))
+      .subscribe({
+        next: updatedCustomer => {
+          this.customers.update(customers => customers.map(item => item.id === updatedCustomer.id ? updatedCustomer : item)
+            .sort((a, b) => a.name.localeCompare(b.name)));
+          this.cancelEdit();
+        },
+        error: () => this.errorMessage.set('Customer could not be updated. Check the details and try again.')
       });
   }
 }
