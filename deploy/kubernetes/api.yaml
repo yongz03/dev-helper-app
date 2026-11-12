@@ -27,7 +27,7 @@ spec:
         fsGroup: 1654
       containers:
         - name: api
-          image: ghcr.io/yongz03/dev-helper-app-api:87fa9717b8a8d00ca22860fa49b31dfec033a2ae
+          image: ghcr.io/yongz03/dev-helper-app-api:1251e1dc43b4ddda3745d53e3d268be548268473
           ports:
             - name: http
               containerPort: 8080
