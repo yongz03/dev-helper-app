@@ -11,14 +11,17 @@ h1 { color: #20243a; font-size: 36px; letter-spacing: -.04em; margin: 0; }
 .card-heading { padding: 22px 24px; border-bottom: 1px solid #eff0f5; }
 .card-heading h2 { color: #272b40; font-size: 16px; margin: 0; }
 .card-heading p { color: #85899a; font-size: 13px; margin: 5px 0 0; }
-.customer-row { display: flex; align-items: center; gap: 14px; padding: 17px 24px; border-bottom: 1px solid #f0f1f5; }
-.customer-row:last-child { border-bottom: 0; }
+.import-books { display: flex; align-items: start; gap: 12px; padding: 18px 24px 0; }
+.import-books mat-form-field { flex: 1; min-width: 0; }
+.import-books button { min-height: 52px; white-space: nowrap; }
+.import-message { color: #4d5b9a; font-size: 13px; margin: 0; padding: 0 24px 14px; }
+.book-row { display: flex; align-items: center; gap: 14px; padding: 17px 24px; border-bottom: 1px solid #f0f1f5; }
+.book-row:last-child { border-bottom: 0; }
 .avatar { display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 40px; border-radius: 50%; background: #edf0fb; color: #4e5d9f; font-weight: 600; }
-.customer-info { min-width: 0; flex: 1; }
-.customer-info h3 { color: #292d42; font-size: 14px; margin: 0; }
-.customer-info p, time { color: #818698; font-size: 12px; margin: 5px 0 0; }
-.customer-row > button { flex: 0 0 auto; }
-time { margin: 0; white-space: nowrap; }
+.book-info { min-width: 0; flex: 1; }
+.book-info h3 { color: #292d42; font-size: 14px; margin: 0; }
+.book-info p { color: #818698; font-size: 12px; margin: 5px 0 0; overflow-wrap: anywhere; }
+.book-row > button, .book-row > a { flex: 0 0 auto; }
 .form-card form { display: flex; flex-direction: column; padding: 22px 24px 24px; gap: 6px; }
 .form-actions { display: flex; gap: 8px; }
 .form-card button { min-height: 46px; border-radius: 8px; margin-top: 4px; }
@@ -28,4 +31,4 @@ time { margin: 0; white-space: nowrap; }
 .empty-state p, .loading-state span { font-size: 13px; margin: 0; }
 .loading-state { gap: 14px; flex-direction: row; }
 .error-message { color: #b3261e; font-size: 13px; margin: 0 0 10px; }
-@media (max-width: 760px) { .page-shell { padding: 36px 18px; } .content-grid { grid-template-columns: 1fr; } .page-header { align-items: start; } h1 { font-size: 30px; } }
+@media (max-width: 760px) { .page-shell { padding: 36px 18px; } .content-grid { grid-template-columns: 1fr; } .page-header { align-items: start; } h1 { font-size: 30px; } .import-books { flex-direction: column; } .import-books mat-form-field, .import-books button { width: 100%; } }

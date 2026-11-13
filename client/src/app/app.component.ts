@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { CustomersComponent } from './customers/customers.component';
+import { BooksComponent } from './books/books.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CustomersComponent],
+  imports: [BooksComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

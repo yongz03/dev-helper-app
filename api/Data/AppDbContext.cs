@@ -5,12 +5,5 @@ namespace DevHelper.Api.Data;
 
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public DbSet<Customer> Customers => Set<Customer>();
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Customer>()
-            .HasIndex(customer => customer.Email)
-            .IsUnique();
-    }
+    public DbSet<Book> Books => Set<Book>();
 }

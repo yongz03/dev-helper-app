@@ -1,0 +1,44 @@
+<main class="page-shell">
+  <header class="page-header">
+    <div><p class="eyebrow">LIBRARY</p><h1>Books</h1><p class="subtitle">Keep your local book files in one place.</p></div>
+    <span class="count">{{ books().length }} total</span>
+  </header>
+  <section class="content-grid" aria-label="Book library">
+    <section class="list-card" aria-labelledby="list-heading">
+      <div class="card-heading"><div><h2 id="list-heading">All books</h2><p>Open a book from your local drive</p></div></div>
+      <div class="import-books">
+        <mat-form-field appearance="outline"><mat-label>Folder to import</mat-label><input matInput [formControl]="importFolder" autocomplete="off" /></mat-form-field>
+        <button mat-stroked-button type="button" (click)="importBooks()" [disabled]="importing()">{{ importing() ? 'Loading books…' : 'Load books from folder' }}</button>
+      </div>
+      @if (importMessage()) { <p class="import-message" role="status">{{ importMessage() }}</p> }
+      @if (successMessage()) { <p class="import-message" role="status">{{ successMessage() }}</p> }
+      @if (loading()) {
+        <div class="loading-state"><mat-spinner diameter="32" /><span>Loading books…</span></div>
+      } @else if (books().length === 0) {
+        <div class="empty-state"><span class="empty-icon">▤</span><h3>No books yet</h3><p>Add your first book using the form.</p></div>
+      } @else {
+        <div class="book-list">
+          @for (book of books(); track book.id) {
+            <article class="book-row"><div class="avatar">{{ book.fileType }}</div><div class="book-info"><h3>{{ book.name }}</h3><p>{{ book.filePath }}</p></div><button mat-button type="button" (click)="openBook(book)" [disabled]="openingBookId() !== null" [attr.aria-label]="'Open ' + book.name">{{ openingBookId() === book.id ? 'Opening…' : 'Open' }}</button><button mat-button type="button" (click)="editBook(book)" [attr.aria-label]="'Edit ' + book.name">Edit</button></article>
+          }
+        </div>
+      }
+    </section>
+    <section class="form-card" aria-labelledby="form-heading">
+      <div class="card-heading"><div><h2 id="form-heading">{{ editingBook() ? 'Edit book' : 'Add a book' }}</h2><p>Enter the book details and local file path</p></div></div>
+      <form [formGroup]="bookForm" (ngSubmit)="saveBook()" novalidate>
+        <mat-form-field appearance="outline"><mat-label>Book name</mat-label><input matInput formControlName="name" autocomplete="off" />
+          @if (bookForm.controls.name.hasError('required') && bookForm.controls.name.touched) { <mat-error>Book name is required</mat-error> }
+        </mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Subfolder</mat-label><input matInput formControlName="subfolder" placeholder="e.g. Fantasy" autocomplete="off" />
+        </mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>File type</mat-label><mat-select formControlName="fileType">
+          <mat-option value="PDF">PDF</mat-option><mat-option value="EPUB">EPUB</mat-option><mat-option value="MOBI">MOBI</mat-option>
+        </mat-select>
+        </mat-form-field>
+        @if (errorMessage()) { <p class="error-message" role="alert">{{ errorMessage() }}</p> }
+        <div class="form-actions"><button mat-flat-button color="primary" type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : editingBook() ? 'Save changes' : 'Add book' }}</button>@if (editingBook()) { <button mat-button type="button" (click)="cancelEdit()" [disabled]="saving()">Cancel</button> }</div>
+      </form>
+    </section>
+  </section>
+</main>
