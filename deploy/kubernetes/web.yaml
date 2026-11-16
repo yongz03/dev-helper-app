@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: ghcr.io/yongz03/dev-helper-app-web:1251e1dc43b4ddda3745d53e3d268be548268473
+          image: ghcr.io/yongz03/dev-helper-app-web:cc83ad2a9d4ab5ca60d5f2df0c555843acfbdf16
           ports:
             - name: http
               containerPort: 8080
