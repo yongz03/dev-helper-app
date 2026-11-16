@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -20,11 +20,23 @@ export class BooksComponent implements OnInit {
   private readonly booksService = inject(BooksService);
   private readonly formBuilder = inject(FormBuilder);
   readonly books = signal<Book[]>([]);
+  readonly booksByCategory = computed(() => {
+    const categories = new Map<string, Book[]>();
+    for (const book of this.books()) {
+      const pathParts = book.filePath.split(/[\\/]/).filter(Boolean);
+      const category = pathParts.length > 1 ? pathParts[pathParts.length - 2] : 'Uncategorized';
+      const categoryBooks = categories.get(category) ?? [];
+      categoryBooks.push(book);
+      categories.set(category, categoryBooks);
+    }
+
+    return [...categories.entries()]
+      .map(([name, books]) => ({ name, books: books.sort((a, b) => a.name.localeCompare(b.name)) }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  });
   readonly loading = signal(true);
   readonly saving = signal(false);
-  readonly openingBookId = signal<number | null>(null);
   readonly errorMessage = signal('');
-  readonly successMessage = signal('');
   readonly importMessage = signal('');
   readonly importing = signal(false);
   readonly editingBook = signal<Book | null>(null);
@@ -36,6 +48,21 @@ export class BooksComponent implements OnInit {
   });
 
   ngOnInit(): void { this.loadBooks(); }
+
+  openBook(book: Book): void {
+    this.errorMessage.set('');
+    this.booksService.openBook(book.id).subscribe({
+      next: () => window.alert('Book opened successfully.'),
+      error: error => {
+        const problem = error instanceof HttpErrorResponse ? error.error as { detail?: unknown; title?: unknown } | null : null;
+        this.errorMessage.set(problem && typeof problem.detail === 'string'
+          ? problem.detail
+          : problem && typeof problem.title === 'string'
+            ? problem.title
+            : `Could not open ${book.name}. Check that the file exists and has a Windows app associated with its file type.`);
+      }
+    });
+  }
 
   loadBooks(): void {
     this.loading.set(true);
@@ -57,17 +84,6 @@ export class BooksComponent implements OnInit {
         this.loadBooks();
       },
       error: error => this.importMessage.set(this.importError(error))
-    });
-  }
-
-  openBook(book: Book): void {
-    if (this.openingBookId() !== null) return;
-    this.openingBookId.set(book.id);
-    this.errorMessage.set('');
-    this.successMessage.set('');
-    this.booksService.openBook(book.id).pipe(finalize(() => this.openingBookId.set(null))).subscribe({
-      next: () => this.successMessage.set(`${book.name} opened successfully.`),
-      error: error => this.errorMessage.set(this.openBookError(error, book))
     });
   }
 
@@ -115,16 +131,6 @@ export class BooksComponent implements OnInit {
     const segments = [this.libraryRoot, value.subfolder.trim(), `${value.name.trim()}.${value.fileType.toLowerCase()}`]
       .filter(segment => segment.length > 0);
     return { name: value.name.trim(), fileType: value.fileType, filePath: segments.join('\\') };
-  }
-
-  private openBookError(error: unknown, book: Book): string {
-    const fallback = `Could not open ${book.name}. Check that the file exists and Windows has an app assigned to .${book.fileType.toLowerCase()} files.`;
-    if (!(error instanceof HttpErrorResponse)) return fallback;
-
-    const problem = error.error as { detail?: unknown; title?: unknown } | null;
-    if (problem && typeof problem.detail === 'string') return problem.detail;
-    if (problem && typeof problem.title === 'string') return problem.title;
-    return fallback;
   }
 
   private importError(error: unknown): string {

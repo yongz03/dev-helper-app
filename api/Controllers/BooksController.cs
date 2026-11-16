@@ -3,6 +3,7 @@ using DevHelper.Api.DTOs;
 using DevHelper.Api.Models;
 using DevHelper.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 
@@ -136,6 +137,25 @@ public sealed class BooksController(AppDbContext dbContext, IBookLauncher bookLa
                 title: "Could not open the book",
                 detail: $"Windows could not open '{book.FilePath}'. Check the file association for .{book.FileType.ToLowerInvariant()}. {exception.Message}");
         }
+    }
+
+    [HttpGet("{id:int}/file/{fileName}")]
+    public async Task<IActionResult> GetBookFile(int id, string fileName, CancellationToken cancellationToken)
+    {
+        var book = await dbContext.Books.AsNoTracking().SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (book is null || !System.IO.File.Exists(book.FilePath)) return NotFound();
+
+        var contentTypeProvider = new FileExtensionContentTypeProvider();
+        var contentType = contentTypeProvider.TryGetContentType(book.FilePath, out var detectedContentType)
+            ? detectedContentType
+            : "application/octet-stream";
+        contentType = Path.GetExtension(book.FilePath).ToLowerInvariant() switch
+        {
+            ".epub" => "application/epub+zip",
+            ".mobi" => "application/x-mobipocket-ebook",
+            _ => contentType
+        };
+        return PhysicalFile(book.FilePath, contentType, enableRangeProcessing: true);
     }
 
     private bool TryNormalize(BookRequest request, out string name, out string fileType, out string filePath)

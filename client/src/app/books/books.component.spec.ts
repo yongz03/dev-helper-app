@@ -10,14 +10,16 @@ describe('BooksComponent', () => {
   const updatedBook: Book = { ...existingBook, name: 'Dune Messiah' };
   let updateBook: jasmine.Spy;
   let createBook: jasmine.Spy;
+  let openBook: jasmine.Spy;
 
   beforeEach(async () => {
     updateBook = jasmine.createSpy('updateBook').and.returnValue(of(updatedBook));
     createBook = jasmine.createSpy('createBook').and.returnValue(of(existingBook));
+    openBook = jasmine.createSpy('openBook').and.returnValue(of(undefined));
     await TestBed.configureTestingModule({
       imports: [BooksComponent],
       providers: [provideNoopAnimations(), { provide: BooksService, useValue: {
-        getBooks: () => of([existingBook]), createBook, importBooks: () => of({ importedCount: 0, skippedCount: 0 }), openBook: () => of(undefined), updateBook
+        getBooks: () => of([existingBook]), createBook, importBooks: () => of({ importedCount: 0, skippedCount: 0 }), openBook, updateBook
       } }]
     }).compileComponents();
   });
@@ -49,16 +51,14 @@ describe('BooksComponent', () => {
     });
   });
 
-  it('opens the selected book through the local API', () => {
+  it('opens a book using the Windows app endpoint', () => {
     const fixture = TestBed.createComponent(BooksComponent);
     fixture.detectChanges();
     const component = fixture.componentInstance;
-    const openBook = spyOn(TestBed.inject(BooksService), 'openBook').and.returnValue(of(undefined));
-
+    spyOn(window, 'alert');
     component.openBook(existingBook);
-
     expect(openBook).toHaveBeenCalledWith(existingBook.id);
-    expect(component.successMessage()).toBe('Dune opened successfully.');
+    expect(window.alert).toHaveBeenCalledWith('Book opened successfully.');
   });
 
   it('imports books from the entered folder and refreshes the list', () => {
@@ -72,5 +72,36 @@ describe('BooksComponent', () => {
 
     expect(importBooks).toHaveBeenCalledWith('D:\\Books');
     expect(component.importMessage()).toBe('Imported 2 books; skipped 1 already in the library.');
+  });
+
+  it('groups books by their containing folder and sorts books within each category', () => {
+    const fixture = TestBed.createComponent(BooksComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.books.set([
+      { id: 1, name: 'Zeta', fileType: 'EPUB', filePath: 'D:\\Books\\Fantasy\\Zeta.epub' },
+      { id: 2, name: 'Alpha', fileType: 'PDF', filePath: 'D:\\Books\\Fantasy\\Alpha.pdf' },
+      { id: 3, name: 'Dune', fileType: 'MOBI', filePath: 'D:\\Books\\Sci-Fi\\Dune.mobi' }
+    ]);
+
+    expect(component.booksByCategory()).toEqual([
+      { name: 'Fantasy', books: [
+        { id: 2, name: 'Alpha', fileType: 'PDF', filePath: 'D:\\Books\\Fantasy\\Alpha.pdf' },
+        { id: 1, name: 'Zeta', fileType: 'EPUB', filePath: 'D:\\Books\\Fantasy\\Zeta.epub' }
+      ] },
+      { name: 'Sci-Fi', books: [
+        { id: 3, name: 'Dune', fileType: 'MOBI', filePath: 'D:\\Books\\Sci-Fi\\Dune.mobi' }
+      ] }
+    ]);
+  });
+
+  it('puts books with no parent folder into Uncategorized', () => {
+    const fixture = TestBed.createComponent(BooksComponent);
+    fixture.detectChanges();
+    fixture.componentInstance.books.set([
+      { id: 1, name: 'Standalone', fileType: 'PDF', filePath: 'standalone.pdf' }
+    ]);
+
+    expect(fixture.componentInstance.booksByCategory()[0].name).toBe('Uncategorized');
   });
 });

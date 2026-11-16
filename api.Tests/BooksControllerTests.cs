@@ -125,6 +125,45 @@ public sealed class BooksControllerTests
     }
 
     [Fact]
+    public async Task GetBookFile_ExistingPdf_ReturnsInlineFileWithRangesEnabled()
+    {
+        var filePath = Path.Combine(Path.GetTempPath(), $"dev-helper-book-{Guid.NewGuid():N}.pdf");
+        await File.WriteAllTextAsync(filePath, "pdf content");
+        try
+        {
+            await using var context = CreateContext();
+            var book = new DevHelper.Api.Models.Book { Name = "Dune", FileType = "PDF", FilePath = filePath };
+            context.Books.Add(book);
+            await context.SaveChangesAsync();
+            var controller = new BooksController(context, new RecordingBookLauncher());
+
+            var result = await controller.GetBookFile(book.Id, "Dune.pdf", default);
+
+            var file = Assert.IsType<PhysicalFileResult>(result);
+            Assert.Equal("application/pdf", file.ContentType);
+            Assert.True(file.EnableRangeProcessing);
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
+
+    [Fact]
+    public async Task GetBookFile_MissingFile_ReturnsNotFound()
+    {
+        await using var context = CreateContext();
+        var book = new DevHelper.Api.Models.Book { Name = "Missing", FileType = "PDF", FilePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")) };
+        context.Books.Add(book);
+        await context.SaveChangesAsync();
+        var controller = new BooksController(context, new RecordingBookLauncher());
+
+        var result = await controller.GetBookFile(book.Id, "Missing.pdf", default);
+
+        Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
     public async Task ImportBooks_AddsSupportedFilesRecursivelyAndSkipsDuplicates()
     {
         var folder = Path.Combine(Path.GetTempPath(), $"dev-helper-books-{Guid.NewGuid():N}");

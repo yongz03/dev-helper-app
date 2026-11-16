@@ -11,15 +11,21 @@
         <button mat-stroked-button type="button" (click)="importBooks()" [disabled]="importing()">{{ importing() ? 'Loading books…' : 'Load books from folder' }}</button>
       </div>
       @if (importMessage()) { <p class="import-message" role="status">{{ importMessage() }}</p> }
-      @if (successMessage()) { <p class="import-message" role="status">{{ successMessage() }}</p> }
       @if (loading()) {
         <div class="loading-state"><mat-spinner diameter="32" /><span>Loading books…</span></div>
       } @else if (books().length === 0) {
         <div class="empty-state"><span class="empty-icon">▤</span><h3>No books yet</h3><p>Add your first book using the form.</p></div>
       } @else {
         <div class="book-list">
-          @for (book of books(); track book.id) {
-            <article class="book-row"><div class="avatar">{{ book.fileType }}</div><div class="book-info"><h3>{{ book.name }}</h3><p>{{ book.filePath }}</p></div><button mat-button type="button" (click)="openBook(book)" [disabled]="openingBookId() !== null" [attr.aria-label]="'Open ' + book.name">{{ openingBookId() === book.id ? 'Opening…' : 'Open' }}</button><button mat-button type="button" (click)="editBook(book)" [attr.aria-label]="'Edit ' + book.name">Edit</button></article>
+          @for (category of booksByCategory(); track category.name) {
+            <details class="book-category">
+              <summary class="category-heading"><span>{{ category.name }}</span><span class="category-meta"><span class="category-count">{{ category.books.length }} books</span><span class="category-chevron" aria-hidden="true"></span></span></summary>
+              <div class="category-books">
+                @for (book of category.books; track book.id) {
+                  <article class="book-row"><div class="avatar">{{ book.fileType }}</div><div class="book-info"><h3>{{ book.name }}</h3><p>{{ book.filePath }}</p></div><button mat-button type="button" (click)="openBook(book)" [attr.aria-label]="'Open ' + book.name + ' in the Windows app'">Open</button><button mat-button type="button" (click)="editBook(book)" [attr.aria-label]="'Edit ' + book.name">Edit</button></article>
+                }
+              </div>
+            </details>
           }
         </div>
       }
