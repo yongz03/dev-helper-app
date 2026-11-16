@@ -116,11 +116,13 @@ public sealed class BooksController(AppDbContext dbContext, IBookLauncher bookLa
 
         try
         {
-            var directory = Path.GetDirectoryName(book.FilePath);
-            var extension = Path.GetExtension(book.FilePath);
-            if (!string.IsNullOrEmpty(directory) && !string.IsNullOrEmpty(extension))
+            var separatorIndex = book.FilePath.LastIndexOfAny(new[] { '\\', '/' });
+            var extensionIndex = book.FilePath.LastIndexOf('.');
+            if (extensionIndex > separatorIndex)
             {
-                book.FilePath = Path.Combine(directory, $"{book.Name}{extension}");
+                var directory = book.FilePath[..(separatorIndex + 1)];
+                var extension = book.FilePath[extensionIndex..];
+                book.FilePath = $"{directory}{book.Name}{extension}";
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
 

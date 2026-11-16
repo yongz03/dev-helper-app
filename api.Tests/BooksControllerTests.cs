@@ -97,7 +97,7 @@ public sealed class BooksControllerTests
         await using var context = CreateContext();
         var book = new DevHelper.Api.Models.Book
         {
-            Name = "野蛮大陆",
+            Name = "\u91ce\u86ee\u5927\u9646",
             FileType = "MOBI",
             FilePath = @"D:\Users\Yong Zhang\Documents\eBooks\history\History.mobi"
         };
@@ -109,7 +109,7 @@ public sealed class BooksControllerTests
         var result = await controller.OpenBook(book.Id, default);
 
         Assert.IsType<NoContentResult>(result);
-        Assert.Equal(@"D:\Users\Yong Zhang\Documents\eBooks\history\野蛮大陆.mobi", launcher.OpenedFilePath);
+        Assert.Equal(@"D:\Users\Yong Zhang\Documents\eBooks\history\" + book.Name + ".mobi", launcher.OpenedFilePath);
         Assert.Equal(launcher.OpenedFilePath, (await context.Books.FindAsync(book.Id))?.FilePath);
     }
 
@@ -169,7 +169,7 @@ public sealed class BooksControllerTests
         var folder = Path.Combine(Path.GetTempPath(), $"dev-helper-books-{Guid.NewGuid():N}");
         var nestedFolder = Path.Combine(folder, "History");
         Directory.CreateDirectory(nestedFolder);
-        var mobiPath = Path.Combine(nestedFolder, "野蛮大陆.mobi");
+        var mobiPath = Path.Combine(nestedFolder, "\u91ce\u86ee\u5927\u9646.mobi");
         var epubPath = Path.Combine(folder, "Dune.epub");
         var unsupportedPath = Path.Combine(folder, "notes.txt");
         await File.WriteAllTextAsync(mobiPath, "book");
