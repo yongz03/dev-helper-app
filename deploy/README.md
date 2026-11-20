@@ -1,5 +1,7 @@
 # GitHub Actions and Argo CD deployment
 
+For the separate Render image deployment path and its current compatibility requirements, see [RENDER-DEPLOYMENT-GUIDE.md](RENDER-DEPLOYMENT-GUIDE.md).
+
 The workflow in `.github/workflows/ci-cd.yml` builds and tests the API and Angular client on pull requests and pushes to `main`. After a successful push to `main`, it publishes immutable, commit-SHA-tagged images to GitHub Container Registry (GHCR), updates the Kubernetes image references, and commits those references to `main`. Argo CD watches `deploy/kubernetes` and syncs each update.
 
 ## One-time setup

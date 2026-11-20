@@ -11,7 +11,7 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<IBookProcessStarter, WindowsBookProcessStarter>();
 builder.Services.AddSingleton<IBookLauncher, BookLauncher>();
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=devhelper.db"));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=/data/devhelper.db"));
 
 var app = builder.Build();
 

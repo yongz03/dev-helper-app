@@ -12,6 +12,16 @@ on:
       - deploy/kubernetes/**
       - README.md
       - '**/*.md'
+  workflow_dispatch:
+    inputs:
+      api_image_tag:
+        description: Commit SHA tag of the published API image to deploy
+        required: true
+        default: cc83ad2a9d4ab5ca60d5f2df0c555843acfbdf16
+      web_image_tag:
+        description: Commit SHA tag of the published web image to deploy
+        required: true
+        default: 1251e1dc43b4ddda3745d53e3d268be548268473
 
 permissions:
   contents: write
@@ -22,6 +32,42 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  deploy-api-to-render:
+    name: Deploy selected API image to Render
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy API image to Render
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_API_DEPLOY_HOOK_URL }}
+          IMAGE_URL: ghcr.io/yongz03/dev-helper-app-api:${{ inputs.api_image_tag }}
+        run: |
+          if [[ -z "$RENDER_DEPLOY_HOOK_URL" ]]; then
+            echo "Missing GitHub Actions secret RENDER_API_DEPLOY_HOOK_URL" >&2
+            exit 1
+          fi
+          curl --fail --silent --show-error --request POST --get \
+            --data-urlencode "imgURL=${IMAGE_URL}" \
+            "$RENDER_DEPLOY_HOOK_URL"
+
+  deploy-web-to-render:
+    name: Deploy selected web image to Render
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy web image to Render
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_WEB_DEPLOY_HOOK_URL }}
+          IMAGE_URL: ghcr.io/yongz03/dev-helper-app-web:${{ inputs.web_image_tag }}
+        run: |
+          if [[ -z "$RENDER_DEPLOY_HOOK_URL" ]]; then
+            echo "Missing GitHub Actions secret RENDER_WEB_DEPLOY_HOOK_URL" >&2
+            exit 1
+          fi
+          curl --fail --silent --show-error --request POST --get \
+            --data-urlencode "imgURL=${IMAGE_URL}" \
+            "$RENDER_DEPLOY_HOOK_URL"
+
   verify:
     name: Build and test
     runs-on: ubuntu-latest
@@ -72,6 +118,30 @@ jobs:
         run: |
           docker build -f client/Dockerfile -t "${{ steps.image.outputs.web }}:${{ steps.image.outputs.tag }}" .
           docker push "${{ steps.image.outputs.web }}:${{ steps.image.outputs.tag }}"
+      - name: Deploy API image to Render
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_API_DEPLOY_HOOK_URL }}
+          IMAGE_URL: ${{ steps.image.outputs.api }}:${{ steps.image.outputs.tag }}
+        run: |
+          if [[ -z "$RENDER_DEPLOY_HOOK_URL" ]]; then
+            echo "Missing GitHub Actions secret RENDER_API_DEPLOY_HOOK_URL" >&2
+            exit 1
+          fi
+          curl --fail --silent --show-error --request POST --get \
+            --data-urlencode "imgURL=${IMAGE_URL}" \
+            "$RENDER_DEPLOY_HOOK_URL"
+      - name: Deploy web image to Render
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_WEB_DEPLOY_HOOK_URL }}
+          IMAGE_URL: ${{ steps.image.outputs.web }}:${{ steps.image.outputs.tag }}
+        run: |
+          if [[ -z "$RENDER_DEPLOY_HOOK_URL" ]]; then
+            echo "Missing GitHub Actions secret RENDER_WEB_DEPLOY_HOOK_URL" >&2
+            exit 1
+          fi
+          curl --fail --silent --show-error --request POST --get \
+            --data-urlencode "imgURL=${IMAGE_URL}" \
+            "$RENDER_DEPLOY_HOOK_URL"
       - name: Update deployment image references
         env:
           API_IMAGE: ${{ steps.image.outputs.api }}
